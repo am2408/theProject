@@ -8,10 +8,12 @@ export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
+  passwordHash: text("password_hash"),          // <— NEW (nullable si OAuth)
   role: userRole("role").notNull().default("CLIENT"),
   bio: text("bio"),
-  skills: text("skills"), // JSON stringifié (simple au début)
-  rating: integer("rating"), // 0-5
+  skills: text("skills"),
+  rating: integer("rating"),
+  companyName: text("company_name"),            // <— NEW (pour clients/boîtes)
   createdAt: timestamp("created_at").defaultNow(),
 });
 
