@@ -3,6 +3,8 @@ import { db } from "@/db/client";
 import { projects, users } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 
+export const dynamic = "force-dynamic";
+
 async function getData() {
   const rows = await db.query.projects.findMany({
     orderBy: [desc(projects.createdAt)],

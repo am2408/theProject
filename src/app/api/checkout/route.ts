@@ -4,6 +4,8 @@ import { db } from "@/db/client";
 import { offers, payments, projects, users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
+export const runtime = "nodejs";
+
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 export async function POST(req: Request) {

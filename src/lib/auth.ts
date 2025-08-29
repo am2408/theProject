@@ -51,7 +51,6 @@ export const authOptions: NextAuthOptions = {
       return true;
     },
     async jwt({ token, user }) {
-      // injecte id/role la 1ère fois
       if (user?.email) {
         const [u] = await db.select().from(users).where(eq(users.email, user.email));
         if (u) {
@@ -64,8 +63,8 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       if (session.user) {
-        (session.user as any).id = token.id;
-        (session.user as any).role = token.role;
+        session.user.id = token.id as number;
+        session.user.role = token.role as "CLIENT" | "FREELANCER";
       }
       return session;
     },

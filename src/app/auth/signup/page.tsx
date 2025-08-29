@@ -6,6 +6,7 @@ import { z } from "zod";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { eq } from "drizzle-orm";
+import Link from "next/link";
 
 const schema = z.object({
   name: z.string().min(2),
@@ -43,7 +44,7 @@ async function signup(formData: FormData) {
     rating: 0,
   });
 
-  redirect("/api/auth/signin?created=1");
+  redirect("/auth/signin?created=1");
 }
 
 export default async function SignUpPage() {
@@ -72,7 +73,7 @@ export default async function SignUpPage() {
         <button className="px-3 py-2 rounded bg-white text-black">Créer le compte</button>
       </form>
       <p className="text-sm opacity-70">
-        Déjà un compte ? <a className="underline" href="/api/auth/signin">Se connecter</a>
+        Déjà un compte ? <Link className="underline" href="/auth/signin">Se connecter</Link>
       </p>
     </div>
   );

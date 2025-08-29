@@ -2,6 +2,7 @@
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
+import Link from "next/link";
 
 export default function SignInPage() {
   const sp = useSearchParams();
@@ -40,7 +41,7 @@ export default function SignInPage() {
       </button>
 
       <p className="text-sm opacity-70">
-        Pas de compte ? <a className="underline" href="/api/auth/signup">Créer un compte</a>
+        Pas de compte ? <Link className="underline" href="/auth/signup">Créer un compte</Link>
       </p>
     </div>
   );

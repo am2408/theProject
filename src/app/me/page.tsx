@@ -4,6 +4,8 @@ import { db } from "@/db/client";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
+export const dynamic = "force-dynamic";
+
 async function toggleRole() {
   "use server";
   const session = await getServerSession(authOptions);

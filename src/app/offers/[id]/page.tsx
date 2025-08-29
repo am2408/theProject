@@ -6,6 +6,8 @@ import { authOptions } from "@/lib/auth";
 import { redirect, notFound } from "next/navigation";
 import ChatStream from "./stream";
 
+export const dynamic = "force-dynamic";
+
 async function sendMessage(formData: FormData) {
   "use server";
   const session = await getServerSession(authOptions);

@@ -11,6 +11,8 @@ import { inArray } from "drizzle-orm";
 import { and } from "drizzle-orm";
 import { redirect as nextRedirect } from "next/navigation";
 
+export const dynamic = "force-dynamic";
+
 async function submitOffer(formData: FormData) {
   "use server";
   const session = await getServerSession(authOptions);
