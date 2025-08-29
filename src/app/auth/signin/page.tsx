@@ -1,48 +1,17 @@
-"use client";
-import { signIn } from "next-auth/react";
-import { useSearchParams } from "next/navigation";
-import { useState } from "react";
-import Link from "next/link";
+export const dynamic = "force-dynamic";
 
-export default function SignInPage() {
-  const sp = useSearchParams();
-  const created = sp.get("created");
-  const [error, setError] = useState<string | null>(null);
+import { Suspense } from "react";
+import SignInClient from "./signin-client";
 
-  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setError(null);
-    const form = new FormData(e.currentTarget);
-    const email = String(form.get("email"));
-    const password = String(form.get("password"));
-    const res = await signIn("credentials", { email, password, redirect: false });
-    if (res?.error) setError("Identifiants invalides.");
-    else window.location.href = "/";
-  }
-
+export default async function SignInPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ created?: string }>;
+}) {
+  const { created } = await searchParams; // lu côté serveur, pas de hook client ici
   return (
-    <div className="max-w-sm mx-auto space-y-4">
-      <h1 className="text-2xl font-bold">Se connecter</h1>
-      {created && <p className="text-green-500 text-sm">Compte créé, vous pouvez vous connecter.</p>}
-      {error && <p className="text-red-500 text-sm">{error}</p>}
-      <form onSubmit={onSubmit} className="grid gap-3">
-        <input name="email" type="email" placeholder="Email" className="px-3 py-2 rounded bg-neutral-900 border border-neutral-800" required />
-        <input name="password" type="password" placeholder="Mot de passe" className="px-3 py-2 rounded bg-neutral-900 border border-neutral-800" required />
-        <button className="px-3 py-2 rounded bg-white text-black">Connexion</button>
-      </form>
-
-      <div className="h-px bg-neutral-800" />
-
-      <button
-        onClick={() => signIn("github")}
-        className="px-3 py-2 rounded bg-black border border-neutral-700"
-      >
-        Se connecter avec GitHub
-      </button>
-
-      <p className="text-sm opacity-70">
-        Pas de compte ? <Link className="underline" href="/auth/signup">Créer un compte</Link>
-      </p>
-    </div>
+    <Suspense fallback={<div className="max-w-sm mx-auto">Chargement…</div>}>
+      <SignInClient created={created === "1"} />
+    </Suspense>
   );
 }
