@@ -49,12 +49,18 @@ export const messages = pgTable("messages", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Paiements (placeholder: on branchera Stripe Connect plus tard)
 export const payments = pgTable("payments", {
   id: serial("id").primaryKey(),
   offerId: integer("offer_id").notNull(),
   amount: integer("amount").notNull(),
-  status: text("status").notNull().default("REQUIRES_PAYMENT"), // REQUIRES_PAYMENT, ESCROWED, RELEASED, REFUNDED
-  stripeId: text("stripe_id"),
+  status: text("status").notNull().default("REQUIRES_PAYMENT"), // REQUIRES_PAYMENT | ESCROWED | EXPIRED | REFUND_REQUESTED | REFUNDED
+  stripeId: text("stripe_id"),        // Checkout Session ID
+  paymentIntentId: text("pi_id"),     // PaymentIntent ID
+  sessionStatus: text("session_status"), // 'open' | 'complete' | 'expired' (Stripe)
+  refundRequested: boolean("refund_requested").default(false),
+  refundId: text("refund_id"),
+  refundReason: text("refund_reason"),
   createdAt: timestamp("created_at").defaultNow(),
 });
+
+

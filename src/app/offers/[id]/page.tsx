@@ -1,42 +1,39 @@
-import { db } from "@/db/client";
-import { offers, messages, users } from "@/db/schema";
-import { eq, desc } from "drizzle-orm";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { redirect, notFound } from "next/navigation";
-import ChatStream from "./stream";
-
 export const dynamic = "force-dynamic";
 
-async function sendMessage(formData: FormData) {
-  "use server";
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.email) throw new Error("Not signed in");
-  const offerId = Number(formData.get("offerId"));
-  const text = String(formData.get("text") ?? "").trim();
-  if (!text) return;
-
-  const [me] = await db.select().from(users).where(eq(users.email, session.user.email));
-  if (!me) throw new Error("User not found");
-
-  // facultatif: vérifier que l'offre est ACCEPTED et que l'utilisateur est client ou freelancer lié à l'offre
-  const [off] = await db.select().from(offers).where(eq(offers.id, offerId));
-  if (!off) throw new Error("Offer not found");
-
-  await db.insert(messages).values({ offerId, senderId: me.id, text });
-}
+import { db } from "@/db/client";
+import { offers, messages } from "@/db/schema";
+import { eq, desc } from "drizzle-orm";
+import { Suspense } from "react";
+import ChatStream from "./stream";
+import { getBaseUrl } from "@/lib/base-url";
 
 export default async function OfferRoom({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ session_id?: string }>;
 }) {
-  const { id } = await params;      // <-- important
+  const { id } = await params;
+  const { session_id } = await searchParams;
   const offerId = Number(id);
-  const [off] = await db.select().from(offers).where(eq(offers.id, offerId));
-  if (!off) return notFound();
 
-  // messages init (SSR)
+  if (session_id) {
+    const base = getBaseUrl(); // <= https://… ou http://localhost:3000
+    try {
+      await fetch(
+        `${base}/api/checkout/verify?session_id=${encodeURIComponent(session_id)}`,
+        { cache: "no-store" }
+      );
+    } catch {
+      // no-op (on ne bloque pas l'UI)
+    }
+  }
+
+  // puis on charge sereinement
+  const [off] = await db.select().from(offers).where(eq(offers.id, offerId));
+  if (!off) return <p>Offre introuvable.</p>;
+
   const initial = await db.select().from(messages)
     .where(eq(messages.offerId, offerId))
     .orderBy(desc(messages.createdAt))
@@ -45,13 +42,9 @@ export default async function OfferRoom({
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">Espace de travail — Offre #{offerId}</h1>
-      <ChatStream offerId={offerId} initial={initial} />
-      <form action={sendMessage} className="flex gap-2">
-        <input type="hidden" name="offerId" value={offerId} />
-        <input name="text" placeholder="Écrire un message…" className="flex-1 px-3 py-2 rounded bg-neutral-900 border border-neutral-800" />
-        <button className="px-3 py-2 rounded bg-white text-black">Envoyer</button>
-      </form>
-      <p className="text-sm opacity-70">Le flux est actualisé toutes les 3s (MVP). Next: realtime KV.</p>
+      <Suspense fallback={<div>Chargement…</div>}>
+        <ChatStream offerId={offerId} initial={initial} />
+      </Suspense>
     </div>
   );
 }

@@ -217,9 +217,11 @@ export default async function ProjectDetail({
               )}
 
               {(() => {
-                const status = payByOffer.get(o.id);
+                const status = payByOffer.get(o.id); // "REQUIRES_PAYMENT" | "ESCROWED" | "REFUND_REQUESTED" | "REFUNDED" | undefined
                 const isEscrowed = status === "ESCROWED";
                 const isPendingPay = status === "REQUIRES_PAYMENT";
+                const isRefunding = status === "REFUND_REQUESTED";
+                const isRefunded = status === "REFUNDED";
 
                 return (
                   <>
@@ -227,14 +229,18 @@ export default async function ProjectDetail({
                     {o.status === "ACCEPTED" && (
                       <>
                         {isEscrowed && (
-                          <p className="mt-2 text-sm opacity-80">
-                            Paiement sécurisé reçu (escrow). ✅
-                          </p>
+                          <p className="mt-2 text-sm opacity-80">Paiement sécurisé reçu (escrow). ✅</p>
+                        )}
+                        {isRefunding && (
+                          <p className="mt-2 text-sm opacity-80">Remboursement demandé… ⏳</p>
+                        )}
+                        {isRefunded && (
+                          <p className="mt-2 text-sm opacity-80">Remboursé. 💸</p>
                         )}
 
-                        {meRole === "CLIENT" && !isEscrowed && (
+                        {meRole === "CLIENT" && !isEscrowed && !isRefunding && !isRefunded && (
                           <div className="flex gap-2 mt-2">
-                            {/* (Re)lancer le checkout */}
+                            {/* créer ou reprendre un checkout */}
                             <form
                               action={async () => {
                                 "use server";
@@ -259,7 +265,7 @@ export default async function ProjectDetail({
                               </button>
                             </form>
 
-                            {/* Annuler tant que rien n’est payé */}
+                            {/* annuler l'acceptation / paiement en attente */}
                             {isPendingPay ? (
                               <form action={cancelPendingPayment}>
                                 <input type="hidden" name="offerId" value={o.id} />
@@ -278,6 +284,28 @@ export default async function ProjectDetail({
                               </form>
                             )}
                           </div>
+                        )}
+
+                        {/* Quand c'est ESCROWED, on propose un remboursement (pas de pay/cancel) */}
+                        {meRole === "CLIENT" && isEscrowed && (
+                          <form
+                            action={async (formData) => {
+                              "use server";
+                              const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/refund`, {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ offerId: o.id, reason: "Client request" }),
+                              });
+                              // on pourrait revalidate ici :
+                              const { revalidatePath } = await import("next/cache");
+                              revalidatePath(`/projects/${p.id}`);
+                            }}
+                            className="mt-2"
+                          >
+                            <button className="px-3 py-1 rounded bg-orange-500 text-black">
+                              Demander un remboursement
+                            </button>
+                          </form>
                         )}
                       </>
                     )}

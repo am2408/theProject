@@ -15,6 +15,20 @@
       "when": 1756388047421,
       "tag": "0001_cultured_madame_masque",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1756455589379,
+      "tag": "0002_gray_betty_ross",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1756456917632,
+      "tag": "0003_gigantic_wendell_rand",
+      "breakpoints": true
     }
   ]
 }
