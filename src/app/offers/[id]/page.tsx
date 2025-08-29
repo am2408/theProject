@@ -26,23 +26,28 @@ async function sendMessage(formData: FormData) {
   await db.insert(messages).values({ offerId, senderId: me.id, text });
 }
 
-export default async function OfferRoom({ params }: { params: { id: string } }) {
-  const id = Number(params.id);
-  const [off] = await db.select().from(offers).where(eq(offers.id, id));
+export default async function OfferRoom({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;      // <-- important
+  const offerId = Number(id);
+  const [off] = await db.select().from(offers).where(eq(offers.id, offerId));
   if (!off) return notFound();
 
   // messages init (SSR)
   const initial = await db.select().from(messages)
-    .where(eq(messages.offerId, id))
+    .where(eq(messages.offerId, offerId))
     .orderBy(desc(messages.createdAt))
     .limit(50);
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Espace de travail — Offre #{id}</h1>
-      <ChatStream offerId={id} initial={initial} />
+      <h1 className="text-2xl font-bold">Espace de travail — Offre #{offerId}</h1>
+      <ChatStream offerId={offerId} initial={initial} />
       <form action={sendMessage} className="flex gap-2">
-        <input type="hidden" name="offerId" value={id} />
+        <input type="hidden" name="offerId" value={offerId} />
         <input name="text" placeholder="Écrire un message…" className="flex-1 px-3 py-2 rounded bg-neutral-900 border border-neutral-800" />
         <button className="px-3 py-2 rounded bg-white text-black">Envoyer</button>
       </form>
